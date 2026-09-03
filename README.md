@@ -1,34 +1,60 @@
-# Materialize fork of Rust-Postgres
+# Supabase fork of Rust-Postgres
 
-This repo serves as a staging area for Materialize patches to the
-[rust-postgres] client before they are accepted upstream.
+This repository is Supabase's fork of the
+[Materialize rust-postgres fork], which in turn tracks the upstream
+[rust-postgres] project.
 
-There are no releases from this fork. The [MaterializeInc/materialize]
-repository simply pins a recent commit from the `master` branch. Other projects
-are welcome to do the same. The `master` branch is never force pushed. Upstream
-changes are periodically into `master` via `git merge`.
+## Why this fork exists
 
-## Adding a new patch
+Supabase maintains this fork to carry targeted changes required by
+[Supabase ETL] when the behavior we need is not yet available from Materialize
+or upstream. This currently includes workload-specific PostgreSQL `COPY OUT`
+response buffering so ETL can apply backpressure promptly and avoid retaining
+unnecessary response data while copying large tables.
 
-Develop your patch against the master branch of the upstream [rust-postgres]
-project. Open a PR with your changes. If your PR is not merged quickly, open the
-same PR against this repository and request a review from a Materialize
-engineer.
+The fork should remain narrowly focused: custom changes should be documented
+and tested, and suitable fixes should still be contributed to the closest
+upstream project whenever practical.
 
-The long-term goal is to get every patch merged upstream.
+The repository lineage is:
 
-## Integrating upstream changes
+```text
+sfackler/rust-postgres
+        ↓
+MaterializeInc/rust-postgres
+        ↓
+supabase/rust-postgres
+```
+
+Consumers should pin an exact commit from this repository rather than depend
+on a moving branch.
+
+## Adding a Supabase patch
+
+Open changes against this repository when they are required by Supabase ETL
+and cannot be consumed from Materialize or upstream. Keep patches focused and
+include tests for behavioral changes.
+
+When a change is generally useful, open or forward the corresponding change to
+the appropriate upstream repository so it can eventually be removed from this
+fork.
+
+## Integrating Materialize changes
+
+Materialize is the direct upstream for this fork. To incorporate its latest
+changes:
 
 ```shell
-git clone https://github.com/MaterializeInc/rust-postgres.git
-git remote add upstream https://github.com/sfackler/rust-postgres.git
+git clone https://github.com/supabase/rust-postgres.git
+cd rust-postgres
+git remote add materialize https://github.com/MaterializeInc/rust-postgres.git
+git fetch materialize
 git checkout master
-git pull
-git checkout -b integrate-upstream
-git fetch upstream
-git merge upstream/master
-# Resolve any conflicts, then open a PR against this repository with the merge commit.
+git checkout -b integrate-materialize
+git merge materialize/master
+# Resolve any conflicts, then open a PR against supabase/rust-postgres.
 ```
 
 [rust-postgres]: https://github.com/sfackler/rust-postgres
-[MaterializeInc/materialize]: https://github.com/MaterializeInc/materialize
+[Materialize rust-postgres fork]: https://github.com/MaterializeInc/rust-postgres
+[Supabase ETL]: https://github.com/supabase/etl
