@@ -177,7 +177,9 @@ pub enum Host {
 ///     either 1, in which case it will be used for all hosts, or the same as the number of hosts. Defaults to 5432 if
 ///     omitted or the empty string.
 /// * `connect_timeout` - The time limit in seconds applied to each socket-level connection attempt. Note that hostnames
-///     can resolve to multiple IP addresses, and this limit is applied to each address. Defaults to no timeout.
+///     can resolve to multiple IP addresses, and this limit is applied to each address. TCP attempts default to ten
+///     seconds; Unix socket attempts default to no timeout. TCP addresses are interleaved by address family and tried
+///     with a 250 ms stagger, with at most four attempts active at once.
 /// * `tcp_user_timeout` - The time limit that transmitted data may remain unacknowledged before a connection is forcibly closed.
 ///     This is ignored for Unix domain socket connections. It is only supported on systems where TCP_USER_TIMEOUT is available
 ///     and will default to the system default if omitted or set to 0; on other systems, it has no effect.
@@ -509,7 +511,7 @@ impl Config {
     /// Sets the timeout applied to socket-level connection attempts.
     ///
     /// Note that hostnames can resolve to multiple IP addresses, and this timeout will apply to each address of each
-    /// host separately. Defaults to no limit.
+    /// host separately. TCP attempts default to ten seconds; Unix socket attempts have no default limit.
     pub fn connect_timeout(&mut self, connect_timeout: Duration) -> &mut Config {
         self.connect_timeout = Some(connect_timeout);
         self

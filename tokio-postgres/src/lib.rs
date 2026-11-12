@@ -182,6 +182,8 @@ pub mod row;
 mod simple_query;
 #[cfg(feature = "runtime")]
 mod socket;
+#[cfg(feature = "runtime")]
+mod staggered;
 mod statement;
 pub mod tls;
 mod to_statement;

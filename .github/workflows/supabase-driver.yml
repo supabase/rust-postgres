@@ -1,0 +1,62 @@
+name: Supabase driver
+
+on:
+  pull_request:
+    branches: [master]
+  push:
+    branches: [master]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  CARGO_TERM_COLOR: always
+  RUST_BACKTRACE: 1
+
+jobs:
+  driver:
+    name: Supabase driver checks
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v6
+      - uses: dtolnay/rust-toolchain@1.95.0
+        with:
+          components: rustfmt, clippy
+      - uses: Swatinem/rust-cache@v2
+      - name: Format
+        run: cargo +1.95.0 fmt --all -- --check
+      - name: Lint driver and tests
+        run: cargo +1.95.0 clippy --locked -p tokio-postgres --lib --tests -- -D warnings
+      - name: Scheduler and startup retry regressions
+        run: cargo +1.95.0 test --locked -p tokio-postgres --lib
+      - name: Runtime-free compatibility
+        run: cargo +1.95.0 check --locked -p tokio-postgres --lib --no-default-features
+      - name: Start PostgreSQL fixture
+        run: |
+          docker compose up -d
+          for _ in {1..60}; do
+            if docker compose exec -T postgres pg_isready -h 127.0.0.1 -p 5433; then
+              exit 0
+            fi
+            sleep 1
+          done
+          docker compose logs
+          exit 1
+      - name: PostgreSQL connection and cancellation tests
+        run: >-
+          cargo +1.95.0 test --locked -p tokio-postgres --test test runtime::
+      - name: TLS connection tests
+        run: cargo +1.95.0 test --locked -p postgres-native-tls --lib
+      - name: Minimum supported compiler
+        run: |
+          rustup toolchain install 1.85.0 --profile minimal
+          cargo +1.85.0 check --locked -p tokio-postgres --lib
+      - name: Stop PostgreSQL fixture
+        if: always()
+        run: docker compose down --volumes

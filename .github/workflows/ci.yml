@@ -1,12 +1,8 @@
 name: CI
 
+# Run the full upstream matrix when integrating upstream changes.
 on:
-  pull_request:
-    branches:
-      - master
-  push:
-    branches:
-      - master
+  workflow_dispatch:
 
 env:
   RUSTFLAGS: -Dwarnings

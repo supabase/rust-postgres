@@ -11,9 +11,6 @@ keywords = ["database", "postgres", "postgresql", "sql", "async"]
 categories = ["database"]
 rust-version = "1.85"
 
-[lib]
-test = false
-
 [[bench]]
 name = "bench"
 harness = false
@@ -23,7 +20,7 @@ all-features = true
 
 [features]
 default = ["runtime"]
-runtime = ["tokio/net", "tokio/time"]
+runtime = ["tokio/net", "tokio/time", "tokio/macros", "futures-util/alloc"]
 
 array-impls = ["postgres-types/array-impls"]
 with-bit-vec-0_6 = ["postgres-types/with-bit-vec-0_6"]
@@ -84,6 +81,7 @@ tokio = { version = "1.0", features = [
   "net",
   "rt",
   "rt-multi-thread",
+  "test-util",
   "time",
 ] }
 
